@@ -1,0 +1,210 @@
+
+# Variables globales
+@baseUrl = http://localhost:3000
+@apiUrl = {{baseUrl}}/api
+
+### 1. HEALTH CHECK - Verificar que la API funciona
+GET {{apiUrl}}/health
+
+    ###
+    ### ==================== PRUEBAS DE FUNCIONALIDAD BÁSICA ====================
+### 2. OBTENER TODOS LOS RECTÁNGULOS (inicialmente vacío)
+GET {{apiUrl}}/rectangulos
+
+###
+
+### 3. CREAR RECTÁNGULO #1 - Rectángulo pequeño
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": 5,
+    "lado2": 3,
+    "nombre": "Rectángulo pequeño"
+}
+
+###
+
+### 4. CREAR RECTÁNGULO #2 - Rectángulo mediano
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": 10.5,
+    "lado2": 8.2,
+    "nombre": "Rectángulo mediano"
+}
+
+###
+
+### 5. CREAR RECTÁNGULO #3 - Rectángulo sin nombre
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": 15.75,
+    "lado2": 12.25
+}
+
+###
+
+### 6. CREAR RECTÁNGULO #4 - Cuadrado
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": 7,
+    "lado2": 7,
+    "nombre": "Cuadrado perfecto"
+}
+
+###
+
+### 7. OBTENER TODOS LOS RECTÁNGULOS (después de crear varios)
+GET {{apiUrl}}/rectangulos
+
+###
+
+### 8. OBTENER RECTÁNGULO POR ID - ID 1
+GET {{apiUrl}}/rectangulos/1
+
+###
+
+### 9. OBTENER RECTÁNGULO POR ID - ID 2
+GET {{apiUrl}}/rectangulos/2
+
+###
+
+### 10. OBTENER RECTÁNGULO INEXISTENTE - ID 999
+GET {{apiUrl}}/rectangulos/999
+
+###
+
+### 11. ACTUALIZAR RECTÁNGULO - Modificar el rectángulo ID 1
+PUT {{apiUrl}}/rectangulos/1
+Content-Type: application/json
+
+{
+    "lado1": 6.5,
+    "lado2": 4.2,
+    "nombre": "Rectángulo modificado"
+}
+
+###
+
+### 12. OBTENER RECTÁNGULO ACTUALIZADO - Ver los cambios en ID 1
+GET {{apiUrl}}/rectangulos/1
+
+###
+
+### 13. ACTUALIZAR RECTÁNGULO SIN NOMBRE - Solo cambiar medidas
+PUT {{apiUrl}}/rectangulos/2
+Content-Type: application/json
+
+{
+    "lado1": 20,
+    "lado2": 15
+}
+
+###
+
+### 14. CREAR RECTÁNGULO CON DECIMALES - Probar precisión
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": 3.14159,
+    "lado2": 2.71828,
+    "nombre": "Rectángulo matemático"
+}
+
+###
+
+### 15. VER TODOS LOS RECTÁNGULOS ACTUALIZADOS
+GET {{apiUrl}}/rectangulos
+
+###
+
+### ==================== PRUEBAS DE ERRORES ====================
+
+### 16. ERROR - Crear rectángulo sin lado1
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado2": 5,
+    "nombre": "Rectángulo incompleto"
+}
+
+###
+
+### 17. ERROR - Crear rectángulo con lado negativo
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": -5,
+    "lado2": 3,
+    "nombre": "Rectángulo con lado negativo"
+}
+
+###
+
+### 18. ERROR - Crear rectángulo con texto en vez de número
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": "abc",
+    "lado2": 3,
+    "nombre": "Rectángulo con texto"
+}
+
+###
+
+### 19. ERROR - Crear rectángulo con lado cero
+POST {{apiUrl}}/rectangulos
+Content-Type: application/json
+
+{
+    "lado1": 0,
+    "lado2": 5,
+    "nombre": "Rectángulo con lado cero"
+}
+
+###
+
+### 20. ERROR - Actualizar rectángulo inexistente
+PUT {{apiUrl}}/rectangulos/999
+Content-Type: application/json
+
+{
+    "lado1": 10,
+    "lado2": 10,
+    "nombre": "Rectángulo fantasma"
+}
+
+###
+
+### ==================== PRUEBAS DE ELIMINACIÓN ====================
+
+### 21. ELIMINAR RECTÁNGULO - ID 3
+DELETE {{apiUrl}}/rectangulos/3
+
+###
+
+### 22. ERROR - Intentar obtener rectángulo eliminado
+GET {{apiUrl}}/rectangulos/3
+
+###
+
+### 23. ERROR - Eliminar rectángulo inexistente
+DELETE {{apiUrl}}/rectangulos/999
+
+###
+
+### 24. VER LISTA FINAL DE RECTÁNGULOS
+GET {{apiUrl}}/rectangulos
+
+
+
