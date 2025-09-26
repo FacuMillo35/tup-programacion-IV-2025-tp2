@@ -1,7 +1,7 @@
-// server.js
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const { body, param, validationResult } = require('express-validator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,12 +10,12 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-// Configuración de la base de datos - AJUSTADO PARA TU ESTRUCTURA
+// Configuración de la base de datos
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: 'admin123', // Cambia por tu contraseña si la tienes
-  database: 'rectangulo_db' // Tu base de datos
+  password: 'admin123', // Cambia por tu contraseña
+  database: 'rectangulo_db'
 };
 
 // Función para crear la conexión a la base de datos
@@ -39,23 +39,6 @@ function calcularSuperficie(lado1, lado2) {
   return lado1 * lado2;
 }
 
-// Función para validar los lados del rectángulo
-function validarLados(lado1, lado2) {
-  if (!lado1 || !lado2) {
-    return { valido: false, mensaje: 'Ambos lados son requeridos' };
-  }
-  
-  if (isNaN(lado1) || isNaN(lado2)) {
-    return { valido: false, mensaje: 'Los lados deben ser números válidos' };
-  }
-  
-  if (lado1 <= 0 || lado2 <= 0) {
-    return { valido: false, mensaje: 'Los lados deben ser números positivos' };
-  }
-  
-  return { valido: true };
-}
-
 // =================== RUTAS DE LA API ===================
 
 // GET - Obtener todos los rectángulos
@@ -64,7 +47,7 @@ app.get('/api/rectangulos', async (req, res) => {
     const connection = await createConnection();
     const [rows] = await connection.execute('SELECT * FROM rectangulo ORDER BY id DESC');
     await connection.end();
-    
+
     res.json({
       success: true,
       data: rows,
@@ -80,20 +63,27 @@ app.get('/api/rectangulos', async (req, res) => {
 });
 
 // GET - Obtener un rectángulo por ID
-app.get('/api/rectangulos/:id', async (req, res) => {
+app.get('/api/rectangulos/:id', [
+  param('id').isInt().withMessage('El id debe ser un número entero')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   try {
     const { id } = req.params;
     const connection = await createConnection();
     const [rows] = await connection.execute('SELECT * FROM rectangulo WHERE id = ?', [id]);
     await connection.end();
-    
+
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Rectángulo no encontrado'
       });
     }
-    
+
     res.json({
       success: true,
       data: rows[0]
@@ -108,48 +98,39 @@ app.get('/api/rectangulos/:id', async (req, res) => {
 });
 
 // POST - Crear un nuevo rectángulo
-app.post('/api/rectangulos', async (req, res) => {
+app.post('/api/rectangulos', [
+  body('lado1').isFloat({ gt: 0 }).withMessage('lado1 debe ser un número positivo'),
+  body('lado2').isFloat({ gt: 0 }).withMessage('lado2 debe ser un número positivo'),
+  body('nombre').optional().isString().withMessage('nombre debe ser texto'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   try {
     const { lado1, lado2, nombre } = req.body;
-    
-    // Validar los lados
-    const validacion = validarLados(lado1, lado2);
-    if (!validacion.valido) {
-      return res.status(400).json({
-        success: false,
-        message: validacion.mensaje
-      });
-    }
-    
-    // Convertir a números
+
     const l1 = parseFloat(lado1);
     const l2 = parseFloat(lado2);
-    
-    // CALCULAR perímetro y superficie ANTES de guardar
+
     const perimetro = calcularPerimetro(l1, l2);
     const superficie = calcularSuperficie(l1, l2);
-    
-    console.log(`Creando rectángulo: lado1=${l1}, lado2=${l2}, perímetro=${perimetro}, superficie=${superficie}`);
-    
-    // Insertar en la base de datos
+
     const connection = await createConnection();
     const query = `
       INSERT INTO rectangulo (lado1, lado2, perimetro, superficie, nombre, fecha_creacion)
       VALUES (?, ?, ?, ?, ?, NOW())
     `;
-    
     const [result] = await connection.execute(query, [l1, l2, perimetro, superficie, nombre || null]);
-    
-    // Obtener el rectángulo creado
     const [newRectangle] = await connection.execute('SELECT * FROM rectangulo WHERE id = ?', [result.insertId]);
     await connection.end();
-    
+
     res.status(201).json({
       success: true,
       message: 'Rectángulo creado exitosamente',
       data: newRectangle[0]
     });
-    
   } catch (error) {
     console.error('Error creando rectángulo:', error);
     res.status(500).json({
@@ -160,33 +141,28 @@ app.post('/api/rectangulos', async (req, res) => {
 });
 
 // PUT - Modificar un rectángulo existente
-app.put('/api/rectangulos/:id', async (req, res) => {
+app.put('/api/rectangulos/:id', [
+  param('id').isInt().withMessage('El id debe ser un número entero'),
+  body('lado1').isFloat({ gt: 0 }).withMessage('lado1 debe ser un número positivo'),
+  body('lado2').isFloat({ gt: 0 }).withMessage('lado2 debe ser un número positivo'),
+  body('nombre').optional().isString().withMessage('nombre debe ser texto'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   try {
     const { id } = req.params;
     const { lado1, lado2, nombre } = req.body;
-    
-    // Validar los lados
-    const validacion = validarLados(lado1, lado2);
-    if (!validacion.valido) {
-      return res.status(400).json({
-        success: false,
-        message: validacion.mensaje
-      });
-    }
-    
-    // Convertir a números
+
     const l1 = parseFloat(lado1);
     const l2 = parseFloat(lado2);
-    
-    // CALCULAR perímetro y superficie ANTES de guardar
+
     const perimetro = calcularPerimetro(l1, l2);
     const superficie = calcularSuperficie(l1, l2);
-    
-    console.log(`Modificando rectángulo ID ${id}: lado1=${l1}, lado2=${l2}, perímetro=${perimetro}, superficie=${superficie}`);
-    
+
     const connection = await createConnection();
-    
-    // Verificar si el rectángulo existe
     const [existing] = await connection.execute('SELECT * FROM rectangulo WHERE id = ?', [id]);
     if (existing.length === 0) {
       await connection.end();
@@ -195,26 +171,21 @@ app.put('/api/rectangulos/:id', async (req, res) => {
         message: 'Rectángulo no encontrado'
       });
     }
-    
-    // Actualizar el rectángulo
+
     const query = `
       UPDATE rectangulo 
       SET lado1 = ?, lado2 = ?, perimetro = ?, superficie = ?, nombre = ?, fecha_modificacion = NOW()
       WHERE id = ?
     `;
-    
     await connection.execute(query, [l1, l2, perimetro, superficie, nombre || null, id]);
-    
-    // Obtener el rectángulo actualizado
     const [updatedRectangle] = await connection.execute('SELECT * FROM rectangulo WHERE id = ?', [id]);
     await connection.end();
-    
+
     res.json({
       success: true,
       message: 'Rectángulo actualizado exitosamente',
       data: updatedRectangle[0]
     });
-    
   } catch (error) {
     console.error('Error actualizando rectángulo:', error);
     res.status(500).json({
@@ -225,12 +196,18 @@ app.put('/api/rectangulos/:id', async (req, res) => {
 });
 
 // DELETE - Eliminar un rectángulo
-app.delete('/api/rectangulos/:id', async (req, res) => {
+app.delete('/api/rectangulos/:id', [
+  param('id').isInt().withMessage('El id debe ser un número entero')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   try {
     const { id } = req.params;
     const connection = await createConnection();
-    
-    // Verificar si el rectángulo existe
+
     const [existing] = await connection.execute('SELECT * FROM rectangulo WHERE id = ?', [id]);
     if (existing.length === 0) {
       await connection.end();
@@ -239,16 +216,14 @@ app.delete('/api/rectangulos/:id', async (req, res) => {
         message: 'Rectángulo no encontrado'
       });
     }
-    
-    // Eliminar el rectángulo
+
     await connection.execute('DELETE FROM rectangulo WHERE id = ?', [id]);
     await connection.end();
-    
+
     res.json({
       success: true,
       message: 'Rectángulo eliminado exitosamente'
     });
-    
   } catch (error) {
     console.error('Error eliminando rectángulo:', error);
     res.status(500).json({
@@ -260,14 +235,10 @@ app.delete('/api/rectangulos/:id', async (req, res) => {
 
 // Ruta de prueba para verificar que la API funciona
 app.get('/api/health', async (req, res) => {
-  console.log('=== HEALTH CHECK ===');
   try {
-    // Probar conexión a la base de datos
     const connection = await createConnection();
-    console.log('✅ Conexión a BD exitosa');
     await connection.end();
-    console.log('✅ Conexión cerrada correctamente');
-    
+
     res.json({
       success: true,
       message: 'API de rectángulos funcionando correctamente',
@@ -275,7 +246,6 @@ app.get('/api/health', async (req, res) => {
       database: 'Conectado correctamente'
     });
   } catch (error) {
-    console.error('❌ Error en health check:', error);
     res.status(500).json({
       success: false,
       message: 'Error de conexión a la base de datos',
@@ -301,14 +271,6 @@ app.get('/', (req, res) => {
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
-  console.log(`📋 API de Rectángulos - Facundo Rojo`);
-  console.log(`📋 Endpoints disponibles:`);
-  console.log(`   GET    /api/rectangulos`);
-  console.log(`   GET    /api/rectangulos/:id`);
-  console.log(`   POST   /api/rectangulos`);
-  console.log(`   PUT    /api/rectangulos/:id`);
-  console.log(`   DELETE /api/rectangulos/:id`);
-  console.log(`   GET    /api/health`);
 });
 
 module.exports = app;
