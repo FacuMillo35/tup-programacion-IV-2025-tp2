@@ -1,0 +1,41 @@
+### Crear tarea
+POST http://localhost:3000/api/tareas
+Content-Type: application/json
+
+{
+  "nombre": "Comprar Pan",
+  "completada": false
+}
+
+### Crear tarea repetida (error)
+POST http://localhost:3000/api/tareas
+Content-Type: application/json
+
+{
+  "nombre": "Estudiar Programacion IV",
+  "completada": true
+}
+
+### Listar todas las tareas
+GET http://localhost:3000/api/tareas
+
+### Listar tareas completadas
+GET http://localhost:3000/api/tareas?completada=true
+
+### Listar tareas pendientes
+GET http://localhost:3000/api/tareas?completada=false
+
+### Obtener tarea por id
+GET http://localhost:3000/api/tareas/1
+
+### Actualizar tarea
+PUT http://localhost:3000/api/tareas/5
+Content-Type: application/json
+
+{
+  "nombre": "Estudiar Legislacion",
+  "completada": true
+}
+
+### Eliminar tarea
+DELETE http://localhost:3000/api/tareas/3
