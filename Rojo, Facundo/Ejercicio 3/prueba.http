@@ -1,0 +1,43 @@
+### Crear materia
+POST http://localhost:3000/api/materias
+Content-Type: application/json
+
+{
+  "nombre": "Geografia"
+}
+
+### Listar materias
+GET http://localhost:3000/api/materias
+
+### Crear alumno
+POST http://localhost:3000/api/alumnos
+Content-Type: application/json
+
+{
+  "nombre": "Rojo Facundo",
+  "materia_id": 4,
+  "nota1": 7,
+  "nota2": 8,
+  "nota3": 9
+}
+
+### Listar alumnos
+GET http://localhost:3000/api/alumnos
+
+### Filtrar alumnos por materia
+GET http://localhost:3000/api/alumnos/materia/2
+
+### Modificar alumno
+PUT http://localhost:3000/api/alumnos/2
+Content-Type: application/json
+
+{
+  "nombre": "Facundo Rojo",
+  "materia_id": 2,
+  "nota1": 9,
+  "nota2": 9,
+  "nota3": 10
+}
+
+### Eliminar alumno
+DELETE http://localhost:3000/api/alumnos/12
