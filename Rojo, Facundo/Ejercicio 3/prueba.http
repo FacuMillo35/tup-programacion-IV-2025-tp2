@@ -32,7 +32,7 @@ PUT http://localhost:3000/api/alumnos/2
 Content-Type: application/json
 
 {
-  "nombre": "Facundo Rojo",
+  "nombre": "Bautista Rojo",
   "materia_id": 2,
   "nota1": 9,
   "nota2": 9,
